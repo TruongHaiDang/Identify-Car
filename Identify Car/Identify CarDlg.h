@@ -41,4 +41,7 @@ public:
 	afx_msg void OnBnClickedButton3();
 	CComboBox var_comboBoxMorph;
 	CEdit var_morphValue;
+	CStatic pictureBox1;
+	CEdit var_Car_Number;
+	CStatic pictureBox2;
 };

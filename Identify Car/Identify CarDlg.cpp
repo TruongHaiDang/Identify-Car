@@ -70,6 +70,9 @@ void CIdentifyCarDlg::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_BUTTON1, var_bienSo);
 	DDX_Control(pDX, IDC_EDIT1, var_morphValue);
+	DDX_Control(pDX, IDC_PictureBox1, pictureBox1);
+	DDX_Control(pDX, IDC_EDIT2, var_Car_Number);
+	DDX_Control(pDX, IDC_PictureBox2, pictureBox2);
 }
 
 BEGIN_MESSAGE_MAP(CIdentifyCarDlg, CDialogEx)
@@ -93,7 +96,7 @@ BOOL CIdentifyCarDlg::OnInitDialog()
 	// IDM_ABOUTBOX must be in the system command range.
 	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
 	ASSERT(IDM_ABOUTBOX < 0xF000);
-
+	
 	CMenu* pSysMenu = GetSystemMenu(FALSE);
 	if (pSysMenu != nullptr)
 	{
@@ -190,6 +193,8 @@ HCURSOR CIdentifyCarDlg::OnQueryDragIcon()
 			::SetParent(getHandle, GetDlgItem(IDC_PictureBox1)->m_hWnd);
 			::ShowWindow(getPa, SW_HIDE);
 			cv::resize(src, dst, cv::Size(600, 450), 0, 0, 1);
+			pictureBox1.UpdateWindow();
+			pictureBox1.RedrawWindow();
 			cv::imshow(fileName, dst);
 		}
 	}
@@ -197,67 +202,75 @@ HCURSOR CIdentifyCarDlg::OnQueryDragIcon()
 	void CIdentifyCarDlg::anyLizeImages()
 	{
 		// Get morph scan
-		var_morphValue.SetWindowTextA("15");
 		CString value;
 		var_morphValue.GetWindowTextA(value);
-		int morphValueScan = atoi(value);
-		// Process
-		cv::cvtColor(src, gray, CV_BGR2GRAY);
-		cv::bilateralFilter(gray, noise_remove, 9, 75, 75);
-		cv::equalizeHist(noise_remove, histgr);
-		cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
-		cv::morphologyEx(histgr, morph, cv::MORPH_OPEN, kernel, cv::Point(-1, -1), morphValueScan);
-		cv::subtract(histgr, morph, substr);
-		cv::adaptiveThreshold(substr, threshImage, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, 35, 5);
-		cv::Canny(threshImage, cannyImage, 250, 255);
-		cv::Mat element = getStructuringElement(MORPH_RECT, cv::Size(3, 3));
-		cv::dilate(cannyImage, dilateImage, element);
-		// Get the number zone
-		std::vector<std::vector<cv::Point>> contours;
-		std::vector<cv::Vec4i> hierarchy;
-		cv::findContours(dilateImage, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
-		// Draw contours
-		for (size_t i = 0; i < contours.size(); i++)
+		int	morphValueScan = atoi(value);
+		if (morphValueScan != NULL)
 		{
-			cv::Rect defineRect = cv::boundingRect(contours[i]);
-			if (defineRect.width > 200 && (double)defineRect.width / defineRect.height > 4.1 && (double)defineRect.width / defineRect.height < 4.4)
+			// Process
+			cv::cvtColor(src, gray, CV_BGR2GRAY);
+			cv::bilateralFilter(gray, noise_remove, 9, 75, 75);
+			cv::equalizeHist(noise_remove, histgr);
+			cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
+			cv::morphologyEx(histgr, morph, cv::MORPH_OPEN, kernel, cv::Point(-1, -1), morphValueScan);
+			cv::subtract(histgr, morph, substr);
+			cv::adaptiveThreshold(substr, threshImage, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, 35, 5);
+			cv::Canny(threshImage, cannyImage, 250, 255);
+			cv::Mat element = getStructuringElement(MORPH_RECT, cv::Size(3, 3));
+			cv::dilate(cannyImage, dilateImage, element);
+			// Get the number zone
+			std::vector<std::vector<cv::Point>> contours;
+			std::vector<cv::Vec4i> hierarchy;
+			cv::findContours(dilateImage, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
+			// Draw contours
+			for (size_t i = 0; i < contours.size(); i++)
 			{
-				// Draw red rectange
-				rectangle(src, defineRect, Scalar(0, 0, 255), 2, 8, 0);
-				Roi = src(defineRect);
-				// Filter inside 
-				cv::cvtColor(Roi, roi_gray, CV_BGR2GRAY);
-				cv::bilateralFilter(roi_gray, roi_noise_remove, 9, 75, 75);
-				cv::equalizeHist(roi_noise_remove, roi_histgr);
-				cv::morphologyEx(roi_histgr, roi_morph, cv::MORPH_OPEN, kernel, cv::Point(-1, -1), morphValueScan);
-				cv::subtract(roi_histgr, roi_morph, roi_substr);
-				cv::adaptiveThreshold(roi_substr, roi_threshImage, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, 35, 5);
-				cv::Canny(roi_threshImage, roi_cannyImage, 250, 255);
-				cv::dilate(roi_cannyImage, roi_dilateImage, element);
-				// Get the number zone
-				std::vector<std::vector<cv::Point>> sub_contours;
-				std::vector<Vec4i> sub_hierarchy;
-				cv::findContours(roi_dilateImage, sub_contours, sub_hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
-				// Draw contours
-				for (size_t j = 0; j < sub_contours.size(); j++)
+				cv::Rect defineRect = cv::boundingRect(contours[i]);
+				if (defineRect.width > 200 && (double)defineRect.width / defineRect.height > 4.1 && (double)defineRect.width / defineRect.height < 4.4)
 				{
-					cv::Rect sub_defineRect = cv::boundingRect(sub_contours[j]);
-					if (sub_defineRect.height > defineRect.height / 2 && sub_defineRect.width < defineRect.width / 8 && sub_defineRect.width > 5 && defineRect.width > 15 && sub_defineRect.y < 13 && sub_defineRect.y > 7)
+					// Draw red rectange
+					rectangle(src, defineRect, Scalar(0, 0, 255), 2, 8, 0);
+					Roi = src(defineRect);
+					// Filter inside 
+					cv::cvtColor(Roi, roi_gray, CV_BGR2GRAY);
+					cv::bilateralFilter(roi_gray, roi_noise_remove, 9, 75, 75);
+					cv::equalizeHist(roi_noise_remove, roi_histgr);
+					cv::morphologyEx(roi_histgr, roi_morph, cv::MORPH_OPEN, kernel, cv::Point(-1, -1), morphValueScan);
+					cv::subtract(roi_histgr, roi_morph, roi_substr);
+					cv::adaptiveThreshold(roi_substr, roi_threshImage, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, 35, 5);
+					cv::Canny(roi_threshImage, roi_cannyImage, 250, 255);
+					cv::dilate(roi_cannyImage, roi_dilateImage, element);
+					// Get the number zone
+					std::vector<std::vector<cv::Point>> sub_contours;
+					std::vector<Vec4i> sub_hierarchy;
+					cv::findContours(roi_dilateImage, sub_contours, sub_hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
+					// Draw contours
+					for (size_t j = 0; j < sub_contours.size(); j++)
 					{
-						rectangle(Roi, sub_defineRect, Scalar(0, 0, 255), 2, 8, 0);
+						cv::Rect sub_defineRect = cv::boundingRect(sub_contours[j]);
+						if (sub_defineRect.height > defineRect.height / 2 && sub_defineRect.width < defineRect.width / 8 && sub_defineRect.width > 5 && defineRect.width > 15 && sub_defineRect.y < 13 && sub_defineRect.y > 7)
+						{
+							rectangle(Roi, sub_defineRect, Scalar(0, 0, 255), 2, 8, 0);
+						}
 					}
 				}
 			}
+			// Filter image
+			cv::namedWindow("Result", CV_WINDOW_AUTOSIZE);
+			HWND getHandle1 = (HWND)cvGetWindowHandle("Result");
+			HWND getPa1 = ::GetParent(getHandle1);
+			::SetParent(getHandle1, GetDlgItem(IDC_PictureBox2)->m_hWnd);
+			::ShowWindow(getPa1, SW_HIDE);
+			pictureBox2.UpdateWindow();
+			pictureBox2.RedrawWindow();
+			// Show result
+			cv::resize(Roi, Roi, cv::Size(270, 100), 0, 0, 1);
+			cv::imshow("Result", Roi);
 		}
-		// Filter image
-		cv::namedWindow("Result", CV_WINDOW_AUTOSIZE);
-		HWND getHandle = (HWND)cvGetWindowHandle("Result");
-		HWND getPa = ::GetParent(getHandle);
-		::SetParent(getHandle, GetDlgItem(IDC_PictureBox2)->m_hWnd);
-		::ShowWindow(getPa, SW_HIDE);
-		// Show result
-		cv::resize(Roi, Roi, cv::Size(270, 100), 0, 0, 1);
-		cv::imshow("Result", Roi);
+		else
+		{
+			MessageBox("Please set morph scan!");
+		}
 	}
 
 	void CIdentifyCarDlg::OnBnClickedButton2()
