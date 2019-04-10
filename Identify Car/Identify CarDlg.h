@@ -36,7 +36,9 @@ public:
 	afx_msg
 		void loadImages();
 	void OnBnClickedButton2();
-	afx_msg void OnBnClickedButton1();
+	afx_msg
+		void anyLizeImages2();
+	void OnBnClickedButton1();
 	void anyLizeImages();
 	afx_msg void OnBnClickedButton3();
 	CComboBox var_comboBoxMorph;
@@ -44,4 +46,6 @@ public:
 	CStatic pictureBox1;
 	CEdit var_Car_Number;
 	CStatic pictureBox2;
+	CButton var_longPlate;
+	CButton var_rectanglePlate;
 };
