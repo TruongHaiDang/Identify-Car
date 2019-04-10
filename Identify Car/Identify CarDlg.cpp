@@ -173,7 +173,7 @@ HCURSOR CIdentifyCarDlg::OnQueryDragIcon()
 }
 
 // Declartion
-	CString path, name;
+	CString path, name, Roi_name;
 	cv::Mat src, dst, gray, noise_remove, histgr, morph, substr, threshImage, cannyImage, dilateImage, Roi;
 	cv::Mat roi_gray, roi_noise_remove, roi_histgr, roi_morph, roi_substr, roi_threshImage, roi_cannyImage, roi_dilateImage, result;
 
@@ -258,8 +258,10 @@ HCURSOR CIdentifyCarDlg::OnQueryDragIcon()
 				}
 			}
 			// Filter image
-			cv::namedWindow("Result", CV_WINDOW_AUTOSIZE);
-			HWND getHandle1 = (HWND)cvGetWindowHandle("Result");
+			Roi_name = name + "Result";
+			const char *fileNameRoi = (LPCSTR)Roi_name;
+			cv::namedWindow(fileNameRoi, CV_WINDOW_AUTOSIZE);
+			HWND getHandle1 = (HWND)cvGetWindowHandle(fileNameRoi);
 			HWND getPa1 = ::GetParent(getHandle1);
 			::SetParent(getHandle1, GetDlgItem(IDC_PictureBox2)->m_hWnd);
 			::ShowWindow(getPa1, SW_HIDE);
@@ -267,7 +269,7 @@ HCURSOR CIdentifyCarDlg::OnQueryDragIcon()
 			pictureBox2.RedrawWindow();
 			// Show result
 			cv::resize(Roi, Roi, cv::Size(270, 100), 0, 0, 1);
-			cv::imshow("Result", Roi);
+			cv::imshow(fileNameRoi, Roi);
 		}
 		else
 		{
