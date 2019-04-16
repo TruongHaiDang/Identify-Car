@@ -7,12 +7,13 @@
 #include "Identify CarDlg.h"
 #include "afxdialogex.h"
 #include "opencv2/opencv_modules.hpp"
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/imgproc/imgproc_c.h>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/highgui/highgui_c.h>
-#include <vector>
+#include "opencv2/core/core.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/imgproc/imgproc_c.h"
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/highgui/highgui_c.h"
+#include "vector"
+#include "algorithm"
 using namespace cv;
 
 #ifdef _DEBUG
@@ -246,11 +247,18 @@ HCURSOR CIdentifyCarDlg::OnQueryDragIcon()
 					std::vector<std::vector<cv::Point>> sub_contours;
 					std::vector<Vec4i> sub_hierarchy;
 					cv::findContours(roi_dilateImage, sub_contours, sub_hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
+					//// Sort contour				
+					//std::vector<float> area;
+					//for (int i = 0; i < sub_contours.size(); i++)
+					//{
+					//area.push_back(cv::contourArea(sub_contours[i]));				
+					//}	
+					//std::sort(area.begin(), area.end(), std::greater<float>());
 					// Draw contours
-					for (size_t j = 0; j < sub_contours.size(); j++)
+					for (size_t j = 1; j < sub_contours.size(); j++)
 					{
 						cv::Rect sub_defineRect = cv::boundingRect(sub_contours[j]);
-						if (sub_defineRect.height > defineRect.height / 2 && sub_defineRect.width < defineRect.width / 8 && sub_defineRect.width > 5 && defineRect.width > 15 && sub_defineRect.y < 13 && sub_defineRect.y > 7.9999)
+						if (cv::contourArea(sub_contours[j]) > 400 && sub_defineRect.height > defineRect.height / 2 && sub_defineRect.width < defineRect.width / 8 && sub_defineRect.width > 5 && defineRect.width > 15 && sub_defineRect.y < 13 && sub_defineRect.y > 7.9999)
 						{
 							rectangle(Roi, sub_defineRect, Scalar(0, 0, 255), 2, 8, 0);
 						}
@@ -332,7 +340,7 @@ HCURSOR CIdentifyCarDlg::OnQueryDragIcon()
 					for (size_t j = 0; j < sub_contours.size(); j++)
 					{
 						cv::Rect sub_defineRect = cv::boundingRect(sub_contours[j]);
-						if (sub_defineRect.width > 16 && sub_defineRect.width < 30 && sub_defineRect.x < 137 && sub_defineRect.y > 5 && (double)sub_defineRect.height / sub_defineRect.width > 2 && (double)sub_defineRect.height / sub_defineRect.width < 3.5)
+						if (cv::contourArea(sub_contours[j]) < 900 && sub_defineRect.width > 16 && sub_defineRect.width < 30 && sub_defineRect.x < 137 && sub_defineRect.y > 5 && (double)sub_defineRect.height / sub_defineRect.width > 2 && (double)sub_defineRect.height / sub_defineRect.width < 3.5)
 						{
 							rectangle(Roi, sub_defineRect, Scalar(0, 0, 255), 2, 8, 0);
 						}
